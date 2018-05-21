@@ -99,7 +99,7 @@ while True:
     if trackbar.threshold_binary_final:
         _, result = cv2.threshold(result, trackbar.threshold_binary_final, 255, cv2.THRESH_BINARY)
 
-    cv2.imshow('sliders', result)
+    cv2.imshow('result', result)
     k = cv2.waitKey(5) & 0xFF
     if k == 27:
         break
