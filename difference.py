@@ -1,6 +1,8 @@
 import cv2
 from glob import glob
 
+# TODO: maybe also consider: https://www.pyimagesearch.com/2017/06/19/image-difference-with-opencv-and-python/
+
 avg = None
 
 images = list(sorted(glob('difference/*.jpeg')))
