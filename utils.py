@@ -61,3 +61,16 @@ def lest_geo(x, y):
     LON = degrees(LON)
 
     return LAT, LON
+
+
+def zoom_bbox(top_left, bottom_right, ratio=1.0):
+    top, left = top_left
+    bottom, right = bottom_right
+    radius_h, radius_w = (top - bottom) / 2, (right - left) / 2
+    center_x = left + radius_w
+    center_y = bottom + radius_h
+
+    radius_h *= ratio
+    radius_w *= ratio
+
+    return ((center_y + radius_h, center_x - radius_w), (center_y - radius_h, center_x + radius_w))
