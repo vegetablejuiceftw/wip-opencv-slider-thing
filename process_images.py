@@ -43,7 +43,7 @@ def process_dir(path, output_filename):
 
         cv2.accumulate(im, avg)
 
-    avg = avg / len(images)
+    avg /= len(images)
 
     res = cv2.convertScaleAbs(avg)
 
@@ -66,11 +66,11 @@ def process_data(ratio=1.0, *, time=None, extra_suffix=None):
     process_dir(output_dir, 'outputs/_avg-%s.png' % output_dir_name)
 
 
-def full_test(ratio, start, end):
-    bbox = zoom_bbox(COORDS_TOP_LEFT, COORDS_BOTTOM_RIGHT, ratio)
+def full_test(ratio, start, end, top_left=COORDS_TOP_LEFT, bottom_right=COORDS_BOTTOM_RIGHT):
+    bbox = zoom_bbox(top_left, bottom_right, ratio)
     time = (start, end)
 
-    root_dir = 'output/'
+    root_dir = 'output-2/'
     output_dir_name = 'R_%.1f S_%s E_%s' % (ratio, start, end)
 
     # for layer in ['S1D-VV-VH']:
@@ -100,4 +100,13 @@ def full_test(ratio, start, end):
 
 
 if __name__ == '__main__':
-    full_test(0.8, '2017-11-01', '2018-02-01')
+    # Söödimetsa
+    top_left = COORDS_TOP_LEFT
+    bottom_right = COORDS_BOTTOM_RIGHT
+    # (57.9412725, 25.9080495)
+    # (57.8986439, 26.0045503)
+    # Vana-Tindi
+    top_left = 58.065318, 25.621239
+    bottom_right = 58.051611, 25.654942
+    #
+    full_test(5, '2017-11-01', '2018-02-01', top_left, bottom_right)

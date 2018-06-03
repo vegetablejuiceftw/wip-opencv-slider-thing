@@ -9,3 +9,8 @@
 <img src="iw-vh-ecc-otsu.jpg" />
 <img src="iw-vh-fuck.jpg" />
 <img src="iw-vh-fuck-1.jpg" />
+
+## Progressive sharpening
+<img src="iw-vh-0.jpg" />
+<img src="iw-vh-1.jpg" />
+<img src="iw-vh-2.jpg" />
