@@ -6,10 +6,13 @@ import numpy as np
 
 avg = None
 
-images = list(sorted(glob('difference/*')))
+images = list(sorted(glob('difference/*.*')))
 
-img_a = cv2.imread(images[0])
-img_b = cv2.imread(images[1])
+print(images)
+img_a = cv2.imread(images[1])
+img_b = cv2.imread(images[0])
+h, w, *_ = img_a.shape
+img_b = cv2.resize(img_b, (w, h), interpolation=cv2.INTER_CUBIC)
 
 # Let's align the images
 # MOTION_HOMOGRAPHY, MOTION_AFFINE
@@ -22,14 +25,15 @@ subject = cv2.cvtColor(img_a, cv2.COLOR_BGR2GRAY)
 reference = cv2.cvtColor(img_b, cv2.COLOR_BGR2GRAY)
 
 s, warp_matrix = cv2.findTransformECC(subject, reference, warp_matrix, warp_mode)
-w, h, *_ = img_a.shape
+w, h, *_ = subject.shape
 
 if warp_mode == cv2.MOTION_HOMOGRAPHY:
     # Use warpPerspective for Homography
     img_a = cv2.warpPerspective(img_a, warp_matrix, (h, w))
 
-cv2.imwrite("difference/img_a.jpg", img_a)
-cv2.imwrite("difference/img_b.jpg", img_b)
+base = "/home/microwave/PycharmProjects/untitled/difference/"
+cv2.imwrite(base + "results/img_a.jpg", img_a)
+cv2.imwrite(base + "results/img_b.jpg", img_b)
 
 diff_color = cv2.subtract(img_a, img_b)
 diff = cv2.cvtColor(diff_color, cv2.COLOR_BGR2GRAY)
@@ -40,8 +44,8 @@ _img, contours, hierarchy = cv2.findContours(thresh, cv2.RETR_TREE, cv2.CHAIN_AP
 
 cv2.drawContours(img_b, contours, -1, (0, 255, 0), 1)
 
-cv2.imwrite("difference/diff.jpg", diff_color)
-cv2.imwrite("difference/outlined.jpg", img_b)
+cv2.imwrite(base + "results/diff.jpg", diff_color)
+cv2.imwrite(base + "results/outlined.jpg", img_b)
 
 while True:
     cv2.imshow('diff', diff_color)
