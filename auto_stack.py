@@ -8,6 +8,9 @@
 
 # python auto_stack.py "/home/toaster/PycharmProjects/wip-opencv-slider-thing/output/R_0.8 S_2017-11-01 E_2018-02-01 L_IW_VH" "output/iw-vh-%s.jpg"
 # python auto_stack.py "/home/toaster/PycharmProjects/wip-opencv-slider-thing/output-1/R_3.0 S_2017-11-01 E_2018-02-01 L_IW-VH-DB" "output-1/iw-vh-%s.jpg"
+# python auto_stack.py "/home/microwave/PycharmProjects/untitled/output/R_0.8 S_2017-11-01 E_2018-02-01 L_IW_VH" "output/iw-vh-%s.jpg"
+# python auto_stack.py "/home/microwave/PycharmProjects/untitled/output-JUN-JUL/R_1.0 S_2017-06-01 E_2018-8-01 L_IW_VH" "output-JUN-JUL/iw-vh-%s.jpg"
+# python auto_stack.py "/home/microwave/PycharmProjects/untitled/output-SEP-OCT/R_1.0 S_2017-09-01 E_2018-11-01 L_IW_VH" "output-SEP-OCT/iw-vh-%s.jpg"
 
 import os
 import cv2
@@ -18,6 +21,8 @@ from time import time
 # Align and stack images with ECC method
 # Slower but more accurate
 def stack_images_ecc(file_list, base=None, median_kernel_size=17, gaussian_kernel_size=5):
+    file_list = list(sorted(file_list))[:50]
+
     # MOTION_HOMOGRAPHY, MOTION_AFFINE
     warp_mode = cv2.MOTION_HOMOGRAPHY
     # 3x3 for homography
@@ -32,7 +37,7 @@ def stack_images_ecc(file_list, base=None, median_kernel_size=17, gaussian_kerne
     first_image = base
     stacked_image = base
 
-    for i, file in enumerate(list(sorted(file_list))):
+    for i, file in enumerate(file_list):
         image = cv2.imread(file, 0)
         image = image[:-100, :]
 
@@ -101,9 +106,9 @@ def stack_images_ecc_iterativly(file_list, output_name):
     tic = time()
     result = None
     for index, settings in enumerate([
-        dict(median_kernel_size=27, gaussian_kernel_size=5),
-        dict(median_kernel_size=15, gaussian_kernel_size=5),
-        dict(median_kernel_size=9, gaussian_kernel_size=3),
+        dict(median_kernel_size=37, gaussian_kernel_size=7),
+        dict(median_kernel_size=19, gaussian_kernel_size=5),
+        dict(median_kernel_size=11, gaussian_kernel_size=3),
     ]):
         result = stack_images_ecc(file_list, base=result, **settings)
 
@@ -122,6 +127,8 @@ def stack_images_ecc_iterativly(file_list, output_name):
 import argparse
 
 if __name__ == '__main__':
+    import os
+    print(os.path.dirname(os.path.abspath(__file__)))
 
     parser = argparse.ArgumentParser(description='')
     parser.add_argument('input_dir', help='Input directory of images ()')

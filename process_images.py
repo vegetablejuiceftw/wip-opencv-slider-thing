@@ -70,7 +70,7 @@ def full_test(ratio, start, end, top_left=COORDS_TOP_LEFT, bottom_right=COORDS_B
     bbox = zoom_bbox(top_left, bottom_right, ratio)
     time = (start, end)
 
-    root_dir = 'output-2/'
+    root_dir = 'output-SEP-OCT/'
     output_dir_name = 'R_%.1f S_%s E_%s' % (ratio, start, end)
 
     # for layer in ['S1D-VV-VH']:
@@ -100,13 +100,13 @@ def full_test(ratio, start, end, top_left=COORDS_TOP_LEFT, bottom_right=COORDS_B
 
 
 if __name__ == '__main__':
-    # Söödimetsa
+    # Söödimetsa, use 1x
     top_left = COORDS_TOP_LEFT
     bottom_right = COORDS_BOTTOM_RIGHT
     # (57.9412725, 25.9080495)
     # (57.8986439, 26.0045503)
-    # Vana-Tindi
-    top_left = 58.065318, 25.621239
-    bottom_right = 58.051611, 25.654942
+    # Vana-Tindi, use zoom 5x
+    # top_left = 58.065318, 25.621239
+    # bottom_right = 58.051611, 25.654942
     #
-    full_test(5, '2017-11-01', '2018-02-01', top_left, bottom_right)
+    full_test(1, '2017-09-01', '2017-11-01', top_left, bottom_right)
