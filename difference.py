@@ -9,8 +9,33 @@ avg = None
 images = list(sorted(glob('difference/*.*')))
 
 print(images)
-img_a = cv2.imread(images[1])
-img_b = cv2.imread(images[0])
+img_a = cv2.imread(images[0])
+img_b = cv2.imread(images[1])
+
+# TODO: also bad
+# shape_a, shape_b = img_a.shape, img_b.shape
+#
+# print(shape_a > shape_b, shape_a , shape_b)
+# if shape_a > shape_b:
+#     larger_image = img_a
+#     smaller_image = img_b
+#     blank_image = np.zeros(larger_image.shape, np.uint8)
+#     h, w, *_ = smaller_image.shape
+#     blank_image[:h, :w] = smaller_image
+#
+#     img_b = blank_image
+# else:
+#     larger_image = img_b
+#     smaller_image = img_a
+#     blank_image = np.zeros(larger_image.shape, np.uint8)
+#     h, w, *_ = smaller_image.shape
+#     blank_image[:h, :w] = smaller_image
+#
+#     img_a = blank_image
+#
+print(img_a.shape, img_b.shape)
+
+# TODO: bad
 h, w, *_ = img_a.shape
 img_b = cv2.resize(img_b, (w, h), interpolation=cv2.INTER_CUBIC)
 
@@ -24,12 +49,14 @@ warp_matrix = np.eye(2 + extra, 3, dtype=np.float32)
 subject = cv2.cvtColor(img_a, cv2.COLOR_BGR2GRAY)
 reference = cv2.cvtColor(img_b, cv2.COLOR_BGR2GRAY)
 
+# https://stackoverflow.com/questions/49136202/how-to-use-opencv-warpperspective-to-overlay-without-overwriting-values?rq=1
 s, warp_matrix = cv2.findTransformECC(subject, reference, warp_matrix, warp_mode)
 w, h, *_ = subject.shape
 
-if warp_mode == cv2.MOTION_HOMOGRAPHY:
-    # Use warpPerspective for Homography
-    img_a = cv2.warpPerspective(img_a, warp_matrix, (h, w))
+# Use warpPerspective for Homography
+img_a = cv2.warpPerspective(img_a, warp_matrix, (h, w))
+
+print(img_a.shape, img_b.shape)
 
 base = "/home/microwave/PycharmProjects/untitled/difference/"
 cv2.imwrite(base + "results/img_a.jpg", img_a)

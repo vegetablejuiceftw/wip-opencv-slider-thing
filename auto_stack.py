@@ -12,6 +12,7 @@
 # python auto_stack.py "/home/microwave/PycharmProjects/untitled/output-JUN-JUL/R_1.0 S_2017-06-01 E_2018-8-01 L_IW_VH" "output-JUN-JUL/iw-vh-%s.jpg"
 # python auto_stack.py "/home/microwave/PycharmProjects/untitled/output-SEP-OCT/R_1.0 S_2017-09-01 E_2018-11-01 L_IW_VH" "output-SEP-OCT/iw-vh-%s.jpg"
 # python auto_stack.py "/home/microwave/PycharmProjects/untitled/imgs/asd" "imgs/iw-vh-%s.jpg"
+# python auto_stack.py "/home/microwave/PycharmProjects/untitled/imgs/imgs-2017" "imgs/iw-vh-%s.jpg"
 
 import os
 import cv2
@@ -40,7 +41,7 @@ def stack_images_ecc(file_list, base=None, median_kernel_size=17, gaussian_kerne
 
     for i, file in enumerate(file_list):
         image = cv2.imread(file, 0)
-        image = image[:-100, :]
+        # image = image[:-100, :]
 
         if stacked_image is not None and stacked_image.shape != image.shape:
             print("Resizing", stacked_image.shape, image.shape)
