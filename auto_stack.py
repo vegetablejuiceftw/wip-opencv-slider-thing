@@ -11,20 +11,21 @@
 # python auto_stack.py "/home/microwave/PycharmProjects/untitled/output/R_0.8 S_2017-11-01 E_2018-02-01 L_IW_VH" "output/iw-vh-%s.jpg"
 # python auto_stack.py "/home/microwave/PycharmProjects/untitled/output-JUN-JUL/R_1.0 S_2017-06-01 E_2018-8-01 L_IW_VH" "output-JUN-JUL/iw-vh-%s.jpg"
 # python auto_stack.py "/home/microwave/PycharmProjects/untitled/output-SEP-OCT/R_1.0 S_2017-09-01 E_2018-11-01 L_IW_VH" "output-SEP-OCT/iw-vh-%s.jpg"
+# python auto_stack.py "/home/microwave/PycharmProjects/untitled/imgs/asd" "imgs/iw-vh-%s.jpg"
 
 import os
 import cv2
 import numpy as np
 from time import time
 
-
+initials = {}
 # Align and stack images with ECC method
 # Slower but more accurate
 def stack_images_ecc(file_list, base=None, median_kernel_size=17, gaussian_kernel_size=5):
-    file_list = list(sorted(file_list))[:50]
+    file_list = list(sorted(file_list))[:25]
 
     # MOTION_HOMOGRAPHY, MOTION_AFFINE
-    warp_mode = cv2.MOTION_HOMOGRAPHY
+    warp_mode = cv2.MOTION_AFFINE
     # 3x3 for homography
     extra = int(warp_mode == cv2.MOTION_HOMOGRAPHY)
     warp_matrix = np.eye(2 + extra, 3, dtype=np.float32)
@@ -40,6 +41,11 @@ def stack_images_ecc(file_list, base=None, median_kernel_size=17, gaussian_kerne
     for i, file in enumerate(file_list):
         image = cv2.imread(file, 0)
         image = image[:-100, :]
+
+        if stacked_image is not None and stacked_image.shape != image.shape:
+            print("Resizing", stacked_image.shape, image.shape)
+            h, w = stacked_image.shape
+            image = cv2.resize(image, (w, h), interpolation=cv2.INTER_CUBIC)
 
         frame = image
 
@@ -95,7 +101,7 @@ def stack_images_ecc(file_list, base=None, median_kernel_size=17, gaussian_kerne
             # image = cv2.warpPerspective(image, warp_matrix, (h, w))
             stacked_image += image
 
-    stacked_image /= len(file_list)
+    stacked_image /= (len(file_list) + bool(base is not None))
     stacked_image = (stacked_image * 255).astype(np.uint8)
 
     frame_normalized = np.zeros(stacked_image.shape)
@@ -106,9 +112,11 @@ def stack_images_ecc_iterativly(file_list, output_name):
     tic = time()
     result = None
     for index, settings in enumerate([
-        dict(median_kernel_size=37, gaussian_kernel_size=7),
-        dict(median_kernel_size=19, gaussian_kernel_size=5),
-        dict(median_kernel_size=11, gaussian_kernel_size=3),
+        dict(median_kernel_size=37, gaussian_kernel_size=17),
+        dict(median_kernel_size=19, gaussian_kernel_size=9),
+        dict(median_kernel_size=11, gaussian_kernel_size=5),
+        dict(median_kernel_size=3, gaussian_kernel_size=3),
+        dict(median_kernel_size=0, gaussian_kernel_size=0),
     ]):
         result = stack_images_ecc(file_list, base=result, **settings)
 
