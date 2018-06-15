@@ -17,7 +17,7 @@ RIVO_INSTANCE_ID = '4cb42bbe-04a4-40ad-9c5b-a9a88ba92dc3'
 INSTANCE_ID = 'c087deea-ec78-4519-9827-230b847ef561'
 
 
-def fetch_truecolor_layer(time, bbox, output_dir=None):
+def fetch_truecolor_layer(time, bbox, output_dir=None, width=2048):
     print("Starting truecolor...")
     coords_wgs84 = [bbox[0][1], bbox[1][0], bbox[1][1], bbox[0][0]]
     bbox = BBox(bbox=coords_wgs84, crs=CRS.WGS84)
@@ -27,8 +27,8 @@ def fetch_truecolor_layer(time, bbox, output_dir=None):
         layer='TRUE_COLOR',
         bbox=bbox,
         time=time or ('2017-09-01', '2017-10-01'),
-        width=2048,
-        maxcc=0.17,
+        width=width,
+        maxcc=0.25,
         instance_id=RIVO_INSTANCE_ID,
     )
     print("Fetching truecolor...")

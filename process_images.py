@@ -70,31 +70,31 @@ def full_test(ratio, start, end, top_left=COORDS_TOP_LEFT, bottom_right=COORDS_B
     bbox = zoom_bbox(top_left, bottom_right, ratio)
     time = (start, end)
 
-    root_dir = 'output-SEP-OCT/'
+    root_dir = 'output/'
     output_dir_name = 'R_%.1f S_%s E_%s' % (ratio, start, end)
 
     # for layer in ['S1D-VV-VH']:
     for layer in [
-        'EW_HH_DB',
-        'EW_HV',
-        'EW_HV_DB',
-        'IW-VH-DB',
-        'IW_VH',
-        'IW_VV',
-        'IW_VV_DB',
+        # 'EW_HH_DB',
+        # 'EW_HV',
+        # 'EW_HV_DB',
+        # 'IW-VH-DB',
+        # 'IW_VH',
+        # 'IW_VV',
+        # 'IW_VV_DB',
         'TRUE_COLOR',
     ]:
         if layer != 'TRUE_COLOR':
             data_source = DataSource.SENTINEL1_IW if 'IW' in layer else DataSource.SENTINEL1_EW
             output_dir = root_dir + output_dir_name + ' L_%s' % layer
-            fetch_s1_layer(layer, output_dir=output_dir, bbox=bbox, time=time, data_source=data_source)
+            fetch_s1_layer(layer, output_dir=output_dir, bbox=bbox, time=time, data_source=data_source, width=1024)
 
             print('\n', layer, "AVERAGE START")
             process_dir(output_dir, '%s AVG.png' % output_dir)
 
         else:
             output_dir = root_dir + output_dir_name + ' L_TC'
-            fetch_truecolor_layer(time, bbox, output_dir)
+            fetch_truecolor_layer(time, bbox, output_dir, width=1024)
 
             process_dir(output_dir, '%s AVG.png' % output_dir)
 
@@ -109,4 +109,5 @@ if __name__ == '__main__':
     # top_left = 58.065318, 25.621239
     # bottom_right = 58.051611, 25.654942
     #
-    full_test(1, '2017-09-01', '2017-11-01', top_left, bottom_right)
+    # full_test(1, '2017-07-01', '2017-09-15', top_left, bottom_right)
+    full_test(1, '2017-06-01', '2017-10-15', top_left, bottom_right)

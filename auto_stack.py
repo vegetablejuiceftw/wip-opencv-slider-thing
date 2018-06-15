@@ -12,7 +12,11 @@
 # python auto_stack.py "/home/microwave/PycharmProjects/untitled/output-JUN-JUL/R_1.0 S_2017-06-01 E_2018-8-01 L_IW_VH" "output-JUN-JUL/iw-vh-%s.jpg"
 # python auto_stack.py "/home/microwave/PycharmProjects/untitled/output-SEP-OCT/R_1.0 S_2017-09-01 E_2018-11-01 L_IW_VH" "output-SEP-OCT/iw-vh-%s.jpg"
 # python auto_stack.py "/home/microwave/PycharmProjects/untitled/imgs/asd" "imgs/iw-vh-%s.jpg"
-# python auto_stack.py "/home/microwave/PycharmProjects/untitled/imgs/imgs-2017" "imgs/iw-vh-%s.jpg"
+
+# python auto_stack.py "/home/microwave/PycharmProjects/wip-opencv-slider-thing/output/R_1.0 S_2017-07-01 E_2017-09-15 L_IW_VH" "output/imgs/IW_VH-%s.jpg"
+# python auto_stack.py "/home/microwave/PycharmProjects/wip-opencv-slider-thing/output/R_1.0 S_2017-07-01 E_2017-09-15 L_IW-VH-DB" "output/imgs/IW_VH-DB-%s.jpg"
+# python auto_stack.py "/home/microwave/PycharmProjects/wip-opencv-slider-thing/output/R_1.0 S_2017-07-01 E_2017-09-15 L_IW_VV" "output/imgs/IW_VV-%s.jpg"
+# python auto_stack.py "/home/microwave/PycharmProjects/wip-opencv-slider-thing/output/R_1.0 S_2017-07-01 E_2017-09-15 L_IW_VV_DB" "output/imgs/IW_VV_DB-%s.jpg"
 
 import os
 import cv2
@@ -20,13 +24,14 @@ import numpy as np
 from time import time
 
 initials = {}
+
+
 # Align and stack images with ECC method
 # Slower but more accurate
-def stack_images_ecc(file_list, base=None, median_kernel_size=17, gaussian_kernel_size=5):
-    file_list = list(sorted(file_list))[:25]
+def stack_images_ecc(file_list, base=None, transform_reference=None, warp_mode=cv2.MOTION_AFFINE, median_kernel_size=17, gaussian_kernel_size=5):
+    file_list = list(sorted(file_list))[:30]
 
     # MOTION_HOMOGRAPHY, MOTION_AFFINE
-    warp_mode = cv2.MOTION_AFFINE
     # 3x3 for homography
     extra = int(warp_mode == cv2.MOTION_HOMOGRAPHY)
     warp_matrix = np.eye(2 + extra, 3, dtype=np.float32)
@@ -36,12 +41,15 @@ def stack_images_ecc(file_list, base=None, median_kernel_size=17, gaussian_kerne
 
     if base is not None:
         base = base.astype(np.float32) / 255
-    first_image = base
+
+    if transform_reference is not None:
+        transform_reference = transform_reference.astype(np.float32) / 255
+
     stacked_image = base
 
     for i, file in enumerate(file_list):
         image = cv2.imread(file, 0)
-        # image = image[:-100, :]
+        image = image[:-100, :]
 
         if stacked_image is not None and stacked_image.shape != image.shape:
             print("Resizing", stacked_image.shape, image.shape)
@@ -67,8 +75,8 @@ def stack_images_ecc(file_list, base=None, median_kernel_size=17, gaussian_kerne
             frame = cv2.GaussianBlur(frame, (gaussian_kernel_size, gaussian_kernel_size), 0)
 
         frame_normalized = np.zeros(frame.shape)
-        frame_normalized = cv2.normalize(frame, frame_normalized, 0, 255, cv2.NORM_MINMAX)
-        frame = frame_normalized
+        # frame_normalized = cv2.normalize(frame, frame_normalized, 0, 255, cv2.NORM_MINMAX)
+        # frame = frame_normalized
 
         # optional step, THRESH_BINARY, THRESH_TOZERO
         # TODO: 1 adaptive thresholding might not work on all scenarios perhaps
@@ -81,15 +89,25 @@ def stack_images_ecc(file_list, base=None, median_kernel_size=17, gaussian_kerne
         image = frame.astype(np.float32) / 255
 
         print(file)
-        if first_image is None:
+        if stacked_image is None:
             # convert to gray scale floating point image
-            first_image = image
             stacked_image = image
         else:
             # Estimate perspective transform
-            stack_reference = stacked_image / (i + bool(base is not None))
-            s, warp_matrix = cv2.findTransformECC(image, stack_reference, warp_matrix, warp_mode)
-            w, h = image.shape
+            # stack_reference = stacked_image / (i + bool(base is not None))
+            # stack_reference = base
+
+            warp_matrix = initials.get(file, warp_matrix)
+            w, h, *multy = image.shape
+
+            if multy:
+                s, warp_matrix = cv2.findTransformECC(cv2.cvtColor(image, cv2.COLOR_BGR2GRAY),
+                                                      cv2.cvtColor(transform_reference, cv2.COLOR_BGR2GRAY), warp_matrix,
+                                                      warp_mode)
+            else:
+                s, warp_matrix = cv2.findTransformECC(image, transform_reference, warp_matrix, warp_mode)
+            initials[file] = warp_matrix.copy()
+            # print(warp_matrix)
 
             if warp_mode == cv2.MOTION_HOMOGRAPHY:
                 # Use warpPerspective for Homography
@@ -103,8 +121,10 @@ def stack_images_ecc(file_list, base=None, median_kernel_size=17, gaussian_kerne
             stacked_image += image
 
     stacked_image /= (len(file_list) + bool(base is not None))
+    # stacked_image /= (len(file_list))
     stacked_image = (stacked_image * 255).astype(np.uint8)
 
+    return stacked_image
     frame_normalized = np.zeros(stacked_image.shape)
     return cv2.normalize(stacked_image, frame_normalized, 0, 255, cv2.NORM_MINMAX)
 
@@ -112,14 +132,47 @@ def stack_images_ecc(file_list, base=None, median_kernel_size=17, gaussian_kerne
 def stack_images_ecc_iterativly(file_list, output_name):
     tic = time()
     result = None
+
+    base = cv2.imread(
+        "/home/microwave/PycharmProjects/wip-opencv-slider-thing/output/R_1.0 S_2017-07-01 E_2017-09-15 L_TC/wms_TRUE_COLOR_EPSG4326_25.908049499999997_57.898643899999996_26.0045503_57.9412725_2017-08-30T09-33-31_1024X824.png")
+    base = base[:-100, :]
+    cv2.imwrite(str(output_name) % "cut", base)
+    base = cv2.cvtColor(base, cv2.COLOR_BGR2GRAY)
+    base = cv2.medianBlur(base, 17)
+    base = 255 - base
+    base = cv2.normalize(base, np.zeros(base.shape), 0, 255, cv2.NORM_MINMAX)
+    # cv2.imwrite(str(output_name) % "blr", base)
+    # base = base.astype(np.float32) / 255
+    result =  base
+    reference = base
+
+    # MOTION_HOMOGRAPHY, MOTION_AFFINE
+    warp_mode = cv2.MOTION_AFFINE
+    # 3x3 for homography
+    extra = int(warp_mode == cv2.MOTION_HOMOGRAPHY)
+    warp_matrix = np.eye(2 + extra, 3, dtype=np.float32)
+
     for index, settings in enumerate([
         dict(median_kernel_size=37, gaussian_kernel_size=17),
-        dict(median_kernel_size=19, gaussian_kernel_size=9),
+        # dict(median_kernel_size=19, gaussian_kernel_size=9),
         dict(median_kernel_size=11, gaussian_kernel_size=5),
-        dict(median_kernel_size=3, gaussian_kernel_size=3),
+        # dict(median_kernel_size=9, gaussian_kernel_size=3),
+        dict(median_kernel_size=7, gaussian_kernel_size=3),
+        # dict(median_kernel_size=5, gaussian_kernel_size=3),
         dict(median_kernel_size=0, gaussian_kernel_size=0),
     ]):
-        result = stack_images_ecc(file_list, base=result, **settings)
+        result = stack_images_ecc(
+            file_list, base=result, transform_reference=reference, warp_mode=warp_mode,**settings)
+        s, warp_matrix = cv2.findTransformECC(result, base, warp_matrix, warp_mode)
+        print(warp_matrix)
+        w, h, *_ = result.shape
+        if warp_mode == cv2.MOTION_HOMOGRAPHY:
+            # Use warpPerspective for Homography
+            result = cv2.warpPerspective(result, warp_matrix, (h, w))
+        else:
+            # Use warpAffine for Translation, Euclidean and Affine
+            result = cv2.warpAffine(result, warp_matrix, (h, w))
+        reference = result
 
         print("Stacked {} in {:.2f} seconds".format(len(file_list), (time() - tic)))
 
@@ -137,6 +190,7 @@ import argparse
 
 if __name__ == '__main__':
     import os
+
     print(os.path.dirname(os.path.abspath(__file__)))
 
     parser = argparse.ArgumentParser(description='')
